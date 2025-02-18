@@ -1,0 +1,6 @@
+{
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[dart]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    }
+}
