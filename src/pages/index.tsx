@@ -1,5 +1,10 @@
 import { useState } from 'react'
-import { useQuery, queryOptions, useMutation } from '@tanstack/react-query'
+import {
+  useQuery,
+  queryOptions,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { Todo, ITodo } from '../components/Todo'
 import { fetchTodos, postTodo } from '@/api/todos'
 
@@ -12,14 +17,40 @@ const todosQueryOptions = () =>
 export default function Home() {
   const [newTodo, setNewTodo] = useState('')
 
+  const queryClient = useQueryClient()
+
   const query = useQuery(todosQueryOptions())
   const todosMutation = useMutation({
     mutationFn: postTodo,
+    onMutate: async (newTodo) => {
+      await queryClient.cancelQueries({ queryKey: ['todos'] })
+
+      const previousTodos: ITodo[] = queryClient.getQueryData(['todos'])
+
+      const optimisticTodos: ITodo[] = [
+        {
+          id: 12398,
+          title: newTodo,
+          completed: false,
+        },
+        ...previousTodos,
+      ]
+
+      queryClient.setQueryData(['todos'], optimisticTodos)
+
+      return { previousTodos }
+    },
+    onError: (err, newTodo, context) => {
+      queryClient.setQueryData(['todos'], context.previousTodos)
+    },
+    onSuccess: async (data) => {
+      queryClient.setQueryData(['todos'], data.data)
+    },
   })
 
   const createTodo = (e) => {
     e.preventDefault()
-
+    setNewTodo('')
     todosMutation.mutate(newTodo)
   }
 
@@ -34,9 +65,9 @@ export default function Home() {
     fetchStatus,
   } = query
 
-  console.log('Boolean states: ', isFetching, isPending, isSuccess, isError)
-  console.log('Data states: ', data, error)
-  console.log('Status states:', status, fetchStatus)
+  // console.log('Boolean states: ', isFetching, isPending, isSuccess, isError)
+  // console.log('Data states: ', data, error)
+  // console.log('Status states:', status, fetchStatus)
 
   if (isPending) return <>Loading...</>
   if (error) return <>Error!</>
@@ -62,6 +93,8 @@ export default function Home() {
           Create todo
         </button>
       </form>
+      {/* {todosMutation.isPending && <>Pending...</>} */}
+      {/* {todosMutation.isPending && <>{todosMutation.variables}</>} */}
       {data.map((todo: ITodo) => (
         <Todo
           key={todo.id}

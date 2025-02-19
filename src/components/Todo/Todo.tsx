@@ -1,12 +1,20 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ITodo } from './model'
 import { completeTodo } from '@/api/todos'
 
 export const Todo = (props: ITodo) => {
   const { title, completed, id } = props
 
+  const queryClient = useQueryClient()
+
   const todoCompleteMutation = useMutation({
     mutationFn: (todoId: number) => completeTodo(todoId),
+    // onMutate: () => alert('Mutate!'),
+    onError: () => console.error('Error!'),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['todos'] })
+    },
+    onSettled: () => console.log('Mutation finished'),
   })
 
   const setTodoCompleted = () => {
