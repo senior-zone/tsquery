@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const fetchTodos = async (page: number) => {
+const fetchTodos = async (page?: number) => {
   const response = await axios.get('http://localhost:3001/todos?page=' + page)
 
   return response.data

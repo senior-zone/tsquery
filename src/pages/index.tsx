@@ -9,7 +9,12 @@ import {
 import { Todo, ITodo } from '../components/Todo'
 import { fetchTodos, postTodo } from '@/api/todos'
 
-export default function Home() {
+export async function getServerSideProps() {
+  const prefetchedTodos = await fetchTodos()
+  return { props: { prefetchedTodos } }
+}
+
+export default function Home(props) {
   const [newTodo, setNewTodo] = useState('')
   const [page, setPage] = useState(1)
 
@@ -20,12 +25,11 @@ export default function Home() {
       queryKey: ['todos', page],
       queryFn: () => fetchTodos(page),
       placeholderData: keepPreviousData,
+      initialData: props.prefetchedTodos,
     })
 
   const { isPending, error, data, isPlaceholderData } =
     useQuery(todosQueryOptions())
-
-  console.log(isPlaceholderData)
 
   const todosMutation = useMutation({
     mutationFn: postTodo,
