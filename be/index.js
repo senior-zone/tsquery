@@ -12,7 +12,14 @@ app.use(cors())
 app.use(bodyParser.json())
 
 app.get('/todos', (req, res) => {
-  res.send(todos)
+  const page = parseInt(req.query.page) || 1
+  const paginatedTodos = todos.filter((todo, index) => {
+    if (todo.id <= page * 10 && todo.id > page * 10 - 10) {
+      return todo
+    }
+  })
+  const hasMore = page < 3
+  res.send({ todos: paginatedTodos, hasMore })
 })
 
 app.post('/todos', (req, res) => {
