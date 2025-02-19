@@ -2,7 +2,11 @@ import '@/styles/globals.css'
 
 import { useState } from 'react'
 import type { AppProps } from 'next/app'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import {
+  QueryClient,
+  QueryClientProvider,
+  HydrationBoundary,
+} from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -19,7 +23,9 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Component {...pageProps} />
+      <HydrationBoundary state={pageProps.dehydratedState}>
+        <Component {...pageProps} />
+      </HydrationBoundary>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   )

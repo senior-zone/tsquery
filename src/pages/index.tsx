@@ -5,18 +5,29 @@ import {
   useMutation,
   useQueryClient,
   keepPreviousData,
+  dehydrate,
+  QueryClient,
 } from '@tanstack/react-query'
 import { Todo, ITodo } from '../components/Todo'
 import { fetchTodos, postTodo } from '@/api/todos'
 
 export async function getServerSideProps() {
-  const prefetchedTodos = await fetchTodos()
-  return { props: { prefetchedTodos } }
+  const queryClient = new QueryClient()
+
+  await queryClient.prefetchQuery({
+    queryKey: ['todos'],
+    queryFn: () => fetchTodos(),
+  })
+
+  return { props: { dehydratedState: dehydrate(queryClient) } }
 }
 
-export default function Home(props) {
+export default function Home({ dehydratedState }) {
   const [newTodo, setNewTodo] = useState('')
   const [page, setPage] = useState(1)
+
+  // console.log(dehydratedState)
+  console.log(dehydratedState.queries[0].state.data)
 
   const queryClient = useQueryClient()
 
@@ -25,7 +36,6 @@ export default function Home(props) {
       queryKey: ['todos', page],
       queryFn: () => fetchTodos(page),
       placeholderData: keepPreviousData,
-      initialData: props.prefetchedTodos,
     })
 
   const { isPending, error, data, isPlaceholderData } =
